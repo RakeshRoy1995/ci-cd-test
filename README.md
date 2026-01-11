@@ -1,2 +1,2 @@
 # Node Js sample
-print hello world from github actions
+1. Print a sample hello world from node js app
