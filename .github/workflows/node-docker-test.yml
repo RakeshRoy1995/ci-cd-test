@@ -1,14 +1,18 @@
-name: Fast Node.js CI
+name: Secure CI with Environments
 
 on:
   push:
-    branches: [ nodejs-docker-test ]
-  pull_request:
+    branches:
+      - develop
+      - main
   workflow_dispatch:
 
 jobs:
   ci:
     runs-on: ubuntu-latest
+
+    environment:
+      name: ${{ github.ref_name == 'main' && 'staging' || 'dev' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -16,12 +20,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Install dependencies
-        run: npm i
+        run: npm ci
 
       - name: Run tests
-        run: npm test
-
-      - name: Build Docker image
-        run: docker build -t node-hello-ci:latest . 
+        env:
+          DATABASE_URL: ${{ secrets.DB_URL }}
+        run: |
+          echo "Running tests for ${{ github.environment }}"
+          npm test
