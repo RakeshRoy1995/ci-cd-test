@@ -1,0 +1,75 @@
+name: Production CI/CD (npm install)
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: 20
+
+jobs:
+  # ========================
+  # 1️⃣ CI JOB (DEV / STAGING)
+  # ========================
+  ci:
+    name: CI - Install, Test
+    runs-on: ubuntu-latest
+
+    environment:
+      name: ${{ github.ref_name == 'main' && 'staging' || 'dev' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm i
+
+      - name: Run tests
+        env:
+          DATABASE_URL: ${{ secrets.DB_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        run: npm test
+
+  # ========================
+  # 2️⃣ PRODUCTION JOB
+  # ========================
+  production:
+    name: Production Release
+    runs-on: ubuntu-latest
+
+    if: github.event_name == 'workflow_dispatch'
+    needs: ci
+
+    environment:
+      name: production   # 🔐 approval required
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm i
+
+      - name: Production smoke test
+        env:
+          DATABASE_URL: ${{ secrets.DB_URL }}
+        run: npm test
+
+      - name: Production deploy placeholder
+        run: |
+          echo "🚀 Deploying to PRODUCTION"
