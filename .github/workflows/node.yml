@@ -28,5 +28,5 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DB_URL }}
         run: |
-          echo "Running tests for ${{ github.environment }}"
+          echo "DB for ${{  github.ref_name }} : ${{ secrets.DB_URL }}"
           npm test
