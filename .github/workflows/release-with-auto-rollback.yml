@@ -1,0 +1,87 @@
+name: Release with Automatic Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to deploy (v1.2.3)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  production:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: production   # 🔐 approval gate
+
+    steps:
+      # =========================
+      # Checkout selected version
+      # =========================
+      - name: Checkout release
+        run: |
+          git clone https://github.com/${{ github.repository }} .
+          git checkout ${{ inputs.version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm i
+
+      # =========================
+      # DEPLOY STEP (placeholder)
+      # =========================
+      - name: Deploy new version
+        id: deploy
+        run: |
+          echo "🚀 Deploying ${{ inputs.version }}"
+          # simulate deploy
+          sleep 3
+
+      # =========================
+      # HEALTH CHECK
+      # =========================
+      - name: Health check
+        id: health
+        run: |
+          echo "Running health check..."
+          # ❌ simulate failure
+          exit 1
+        continue-on-error: true
+
+      # =========================
+      # GET PREVIOUS STABLE TAG
+      # =========================
+      - name: Get previous version
+        id: previous
+        if: steps.health.outcome == 'failure'
+        run: |
+          git fetch --tags
+          PREV=$(git tag --sort=-v:refname | grep -v "${{ inputs.version }}" | head -n 1)
+          echo "prev=$PREV" >> $GITHUB_OUTPUT
+
+      # =========================
+      # AUTO ROLLBACK
+      # =========================
+      - name: Rollback to previous version
+        if: steps.health.outcome == 'failure'
+        run: |
+          echo "⏪ Rolling back to ${{ steps.previous.outputs.prev }}"
+          git checkout ${{ steps.previous.outputs.prev }}
+          npm i
+          echo "✅ Rollback completed"
+
+      # =========================
+      # FAIL PIPELINE (IMPORTANT)
+      # =========================
+      - name: Mark release failed
+        if: steps.health.outcome == 'failure'
+        run: |
+          echo "❌ Release failed, rollback executed"
+          exit 1
