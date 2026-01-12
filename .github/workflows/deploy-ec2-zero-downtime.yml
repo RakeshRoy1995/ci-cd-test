@@ -31,13 +31,13 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             set -e
       
-            cd ....${{ secrets.APP_DIR }}
+            cd ${{ secrets.APP_DIR }}
       
             echo "Pulling latest code..."
             git pull origin main || true
       
             echo "Installing dependencies..."
-            npm install
+            npm install ......
       
             echo "Reloading app (zero downtime)..."
             pm2 reload myapp || pm2 start index.js --name myapp -i max
