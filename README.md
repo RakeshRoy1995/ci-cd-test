@@ -5,3 +5,5 @@
 4. realease and taging
 5. auto roleback to last realease if fails
 6. zero downtime ec2 deployment
+7. roleback with docker image
+8. green blue deployment with docker
