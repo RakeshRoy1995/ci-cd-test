@@ -8,7 +8,7 @@ WORKDIR /app
 # Copy app source code
 COPY . .
 
-RUN echo ls --all
+RUN echo "Listing files:" && ls
 
 # Install dependencies
 RUN npm ci --omit=dev
