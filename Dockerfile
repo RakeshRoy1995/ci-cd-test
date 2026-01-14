@@ -1,20 +1,12 @@
-# Use Node.js official image
-FROM node:20
+FROM node:20-alpine
 
-# Create app directory
 WORKDIR /app
 
+COPY package*.json ./
 
-# Copy app source code
+ARG NODE_ENV=production
+RUN npm ci --omit=dev
+
 COPY . .
 
-RUN echo "Listing files:" && ls
-RUN echo "Listing files: 2 " && cd ../ ls
-# Install dependencies
-RUN npm i
-
-# Expose port your app uses
-EXPOSE 3000
-
-# Start the app
 CMD ["node", "index.js"]
